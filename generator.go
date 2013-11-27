@@ -39,35 +39,28 @@ type test struct {
 	date time.Time
 }
 
-func testTime() {
+func saveList(posts_src string) {
 
-}
+	posts_data, _ := ioutil.ReadDir(posts_src)
 
-func saveList() {
+	for index, _ := range posts_data {
+		fmt.Println("hi %i", index)
+	}
 
 	newPost := post{Title: "The Man Who Saved My Life", Shortname: "cigarettes", DateCreated: time.Now()}
+
 	jsonPost, err := json.Marshal(newPost)
 	if err == nil {
 		fmt.Println("rawjson = " + string(jsonPost))
 	}
 }
 
-// func loadList(g *Generator) {
-// 	listPath := path.Join(g.rootPath, "list.json")
-// 	file, err := ioutil.ReadFile(g.rootPath)
-// 	if err == nil {
-
-// 	}
-// }
-
 func Compile(root string, shortname string) string {
-	path := path.Join(root, "src/"+shortname+".md")
+	path := path.Join(root, shortname+".md")
 
 	file, err := ioutil.ReadFile(path)
 
 	checksum := crc64.Checksum(file, crc64.MakeTable(crc64.ISO))
-
-	saveList()
 
 	fmt.Println(checksum)
 
