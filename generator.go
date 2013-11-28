@@ -1,6 +1,7 @@
 package golang_blog
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/russross/blackfriday"
@@ -23,6 +24,10 @@ type post struct {
 	Tags        []string
 }
 
+func (p post) String() string {
+	return "Post shortname = " + p.Shortname
+}
+
 type Generator struct {
 	rootPath string
 	list     []post
@@ -32,11 +37,12 @@ type test struct {
 	date time.Time
 }
 
-func Generate() {
+func Generate(manifest bool) {
 	initialize()
-	manifest := GetManifest(os.Getenv("BLOG_SRC"))
-	SaveManifest(os.Getenv("BLOG_POSTS"), strings.Join(manifest, "\n"))
-	GenerateFiles(os.Getenv("BLOG_SRC"), os.Getenv("BLOG_POSTS"))
+	if manifest {
+		SaveManifest()
+	}
+	GenerateFiles()
 }
 
 func initialize() {
@@ -48,30 +54,97 @@ func initialize() {
 	}
 }
 
-func SaveManifest(posts_target string, manifestJson string) {
-	os.MkdirAll(posts_target, os.ModePerm)
-	manifestFile, _ := os.Create(path.Join(posts_target, "manifest.json"))
-	manifestFile.WriteString(manifestJson)
+func PublicPosts() []post {
+	manifest := Manifest()
+	ret := make([]post, 0)
+
+	for _, post := range manifest {
+		if post.Public {
+			ret = append(ret, post)
+		}
+	}
+	return ret
 }
 
-func GetManifest(posts_src string) []string {
-	postsData, _ := ioutil.ReadDir(posts_src)
+func GenerateHtml() {
+	posts := PublicPosts()
+	for _, post := range posts {
 
-	manifestJson := make([]string, 1)
+	}
+}
 
-	for _, postData := range postsData {
-		newPost := post{Shortname: Shortname(postData.Name()), DateCreated: time.Now(), Public: false}
+func ManifestBytes() []byte {
+	initialize()
+	posts_target := os.Getenv("BLOG_POSTS")
+	fullpath := path.Join(posts_target, "manifest.json")
+	file, err := ioutil.ReadFile(fullpath)
 
-		jsonPost, err := json.Marshal(newPost)
+	if err == nil {
+		return file
+	}
+
+	return nil
+}
+
+func Manifest() []post {
+	initialize()
+	posts_target := os.Getenv("BLOG_POSTS")
+	fullpath := path.Join(posts_target, "manifest.json")
+	file, err := ioutil.ReadFile(fullpath)
+	var posts = make([]post, 1)
+
+	if err == nil {
+		err = json.Unmarshal(file, &posts)
 		if err == nil {
-			manifestJson = append(manifestJson, string(jsonPost))
+			return posts
+		} else {
+			fmt.Println("err = ", err)
 		}
 	}
 
-	return manifestJson
+	return nil
 }
 
-func GenerateFiles(posts_src string, posts_target string) {
+func WriteManifest(posts_target string, manifest []post) {
+	os.MkdirAll(posts_target, os.ModePerm)
+	manifestPath := path.Join(posts_target, "manifest.json")
+
+	file, err := os.Create(manifestPath)
+
+	if err == nil {
+		manifestJson, err := json.Marshal(manifest)
+		if err == nil {
+			var b bytes.Buffer
+			json.Indent(&b, manifestJson, "", "\t")
+			b.WriteTo(file)
+		}
+	} else {
+		fmt.Println(err)
+	}
+}
+
+func SaveManifest() {
+	initialize()
+	posts_src := os.Getenv("BLOG_SRC")
+	posts_target := os.Getenv("BLOG_POSTS")
+
+	postsData, _ := ioutil.ReadDir(posts_src)
+
+	manifest := make([]post, 1)
+
+	for _, postData := range postsData {
+		newPost := post{Shortname: Shortname(postData.Name()), DateCreated: time.Now(), Public: false}
+		manifest = append(manifest, newPost)
+	}
+
+	WriteManifest(posts_target, manifest)
+}
+
+func GenerateFiles() {
+	initialize()
+	posts_src := os.Getenv("BLOG_SRC")
+	posts_target := os.Getenv("BLOG_POSTS")
+
 	postsData, _ := ioutil.ReadDir(posts_src)
 
 	outDir := path.Join(posts_target, "out")
