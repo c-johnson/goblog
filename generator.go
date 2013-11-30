@@ -16,13 +16,7 @@ import (
 var _ = crc64.MakeTable
 
 func init() {
-	if os.Getenv("BLOG_SRC") == "" {
-
-		os.Setenv("BLOG_SRC", "~/blog_posts")
-	}
-	if os.Getenv("BLOG_POSTS") == "" {
-		os.Setenv("BLOG_POSTS", "$GOPATH/web/posts")
-	}
+	Initialize()
 }
 
 type post struct {
@@ -69,8 +63,8 @@ func PublicPosts() []post {
 }
 
 func GenerateHtml() {
-	posts_src := path.Join(os.Getenv("BLOG_SRC"))
-	posts_target := path.Join(os.Getenv("BLOG_POSTS"), "out")
+	posts_src := path.Join(BLOG_SRC)
+	posts_target := path.Join(BLOG_TARGET, "out")
 	os.MkdirAll(posts_target, os.ModePerm)
 	posts := PublicPosts()
 	for _, post := range posts {
@@ -86,7 +80,7 @@ func GenerateHtml() {
 }
 
 func ManifestBytes() []byte {
-	posts_target := os.Getenv("BLOG_POSTS")
+	posts_target := BLOG_TARGET
 	fullpath := path.Join(posts_target, "manifest.json")
 	file, err := ioutil.ReadFile(fullpath)
 
@@ -98,7 +92,7 @@ func ManifestBytes() []byte {
 }
 
 func Manifest() []post {
-	posts_target := os.Getenv("BLOG_POSTS")
+	posts_target := BLOG_TARGET
 	fullpath := path.Join(posts_target, "manifest.json")
 	file, err := ioutil.ReadFile(fullpath)
 	var posts = make([]post, 1)
@@ -134,8 +128,8 @@ func WriteManifest(posts_target string, manifest []post) {
 }
 
 func SaveManifest() {
-	posts_src := os.Getenv("BLOG_SRC")
-	posts_target := os.Getenv("BLOG_POSTS")
+	posts_src := BLOG_SRC
+	posts_target := BLOG_TARGET
 
 	postsData, _ := ioutil.ReadDir(posts_src)
 
