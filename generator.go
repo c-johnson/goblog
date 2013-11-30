@@ -50,63 +50,52 @@ func Generate(manifest bool) {
 	GenerateHtml()
 }
 
-func PublicPosts() []post {
-	manifest := Manifest()
-	ret := make([]post, 0)
-
-	for _, post := range manifest {
-		if post.Public {
-			ret = append(ret, post)
+func PublicPosts() (posts []post, err error) {
+	manifest, err := Manifest()
+	// ret := make([]post, 0)
+	if err == nil {
+		for _, post := range manifest {
+			if post.Public {
+				posts = append(posts, post)
+			}
 		}
 	}
-	return ret
+	return
 }
 
 func GenerateHtml() {
 	posts_src := path.Join(BLOG_SRC)
 	posts_target := path.Join(BLOG_TARGET, "out")
 	os.MkdirAll(posts_target, os.ModePerm)
-	posts := PublicPosts()
-	for _, post := range posts {
-		if post.Public {
-			html := Compile(posts_src, post.Shortname)
-			outPath := path.Join(posts_target, post.Shortname+".html")
-			err := ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
-			if err != nil {
-				fmt.Println("Fuck, an err ", err)
+	posts, err := PublicPosts()
+	if err == nil {
+		for _, post := range posts {
+			if post.Public {
+				html := Compile(posts_src, post.Shortname)
+				outPath := path.Join(posts_target, post.Shortname+".html")
+				err := ioutil.WriteFile(outPath, []byte(html), os.ModePerm)
+				if err != nil {
+					fmt.Println("Fuck, an err ", err)
+				}
 			}
 		}
 	}
 }
 
-func ManifestBytes() []byte {
-	posts_target := BLOG_TARGET
-	fullpath := path.Join(posts_target, "manifest.json")
-	file, err := ioutil.ReadFile(fullpath)
-
-	if err == nil {
-		return file
-	}
-
-	return nil
+func ManifestBytes() ([]byte, error) {
+	fullpath := path.Join(BLOG_TARGET, "manifest.json")
+	return ioutil.ReadFile(fullpath)
 }
 
-func Manifest() []post {
-	posts_target := BLOG_TARGET
-	fullpath := path.Join(posts_target, "manifest.json")
-	file, err := ioutil.ReadFile(fullpath)
+func Manifest() ([]post, error) {
+	manifestBytes, err := ManifestBytes()
 	var posts = make([]post, 1)
 
 	if err == nil {
-		err = json.Unmarshal(file, &posts)
-		if err == nil {
-			return posts
-		} else {
-			fmt.Println("err = ", err)
-		}
+		err = json.Unmarshal(manifestBytes, &posts)
 	}
 
-	return nil
+	return posts, err
 }
 
 func WriteManifest(posts_target string, manifest []post) {
