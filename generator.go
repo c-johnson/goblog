@@ -52,7 +52,6 @@ func Generate(manifest bool) {
 
 func PublicPosts() (posts []post, err error) {
 	manifest, err := Manifest()
-	// ret := make([]post, 0)
 	if err == nil {
 		for _, post := range manifest {
 			if post.Public {
@@ -117,10 +116,7 @@ func WriteManifest(posts_target string, manifest []post) {
 }
 
 func SaveManifest() {
-	posts_src := BLOG_SRC
-	posts_target := BLOG_TARGET
-
-	postsData, _ := ioutil.ReadDir(posts_src)
+	postsData, _ := ioutil.ReadDir(BLOG_SRC)
 
 	manifest := make([]post, 1)
 
@@ -129,7 +125,7 @@ func SaveManifest() {
 		manifest = append(manifest, newPost)
 	}
 
-	WriteManifest(posts_target, manifest)
+	WriteManifest(BLOG_TARGET, manifest)
 }
 
 func Shortname(str string) string {

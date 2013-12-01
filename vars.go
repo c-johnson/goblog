@@ -1,23 +1,29 @@
 package golang_blog
 
 import (
+	"fmt"
 	"os"
+	"path"
 )
+
+// var _ = fmt.Println
 
 func init() {
 	Initialize()
+	fmt.Println(BLOG_SRC)
+	fmt.Println(BLOG_WEB)
+	fmt.Println(BLOG_TARGET)
 }
 
 var (
 	BLOG_SRC    = os.Getenv("BLOG_SRC")
-	BLOG_TARGET = os.Getenv("BLOG_TARGET")
+	GOPATH      = os.Getenv("GOPATH")
+	BLOG_WEB    = path.Join(GOPATH, "web")
+	BLOG_TARGET = path.Join(BLOG_WEB, "posts")
 )
 
 func Initialize() {
 	if os.Getenv("BLOG_SRC") == "" {
 		os.Setenv("BLOG_SRC", "~/blog_posts")
-	}
-	if os.Getenv("BLOG_TARGET") == "" {
-		os.Setenv("BLOG_TARGET", "$GOPATH/web/posts")
 	}
 }
